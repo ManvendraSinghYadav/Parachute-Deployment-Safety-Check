@@ -10,6 +10,7 @@ from parachute_graphs import create_graphs  # Import the create_graphs function
 
 # Image Path (Update if needed)
 logo_path = "D:/isro project image/parachute_background.jpg"
+background_image_path = "D:/isro project image/pro img.jpg"  # Background image path
 
 # Initialize Main Window
 root = tk.Tk()
@@ -17,22 +18,45 @@ root.title("Parachute Deployment System")
 root.geometry("1400x900")  # Wider window
 root.configure(bg="#f0f0f0")
 
+# Check if the background image exists
+if not os.path.exists(background_image_path):
+    messagebox.showerror("Error", f"Background image not found at: {background_image_path}")
+    exit()
+
+# Load Background Image
+try:
+    background_image = Image.open(background_image_path)
+    background_image = background_image.resize((1600, 900), Image.LANCZOS)  # Resize to fit window
+    background_photo = ImageTk.PhotoImage(background_image)
+except Exception as e:
+    messagebox.showerror("Error", f"Failed to load background image: {e}")
+    exit()
+
+# Create a Canvas to set the background image
+canvas = tk.Canvas(root, width=1600, height=900)
+canvas.pack(fill="both", expand=True)
+canvas.create_image(0, 0, image=background_photo, anchor="nw")
+
 # Check if the logo exists
 if not os.path.exists(logo_path):
-    messagebox.showerror("Error", "Logo image not found! Place 'parachute_background.jpg' in 'D:/isro project image'")
+    messagebox.showerror("Error", f"Logo image not found at: {logo_path}")
     exit()
 
 # Load & Display Logo
-logo = Image.open(logo_path)
-logo = logo.resize((250, 80), Image.LANCZOS)
-logo = ImageTk.PhotoImage(logo)
+try:
+    logo = Image.open(logo_path)
+    logo = logo.resize((190, 150), Image.LANCZOS)
+    logo = ImageTk.PhotoImage(logo)
+except Exception as e:
+    messagebox.showerror("Error", f"Failed to load logo image: {e}")
+    exit()
 
 logo_label = tk.Label(root, image=logo, bg="#f0f0f0")
-logo_label.pack(pady=10)
+logo_label.place(x=20, y=20)  # Position the logo
 
 # Create Main Form Frame
 form_frame = tk.Frame(root, bg="#ffffff", padx=20, pady=20, relief="ridge", bd=3)
-form_frame.pack(pady=20, fill="both", expand=True)  # Make the form frame wider
+form_frame.place(relx=0.5, rely=0.5, anchor="center")  # Center the form frame
 
 # Title
 tk.Label(form_frame, text="Enter Parachute Deployment Details", font=("Arial", 16, "bold"), bg="#ffffff").pack(pady=10)
@@ -155,7 +179,7 @@ def calculate_descent_rate():
         calculated_vars["Wind Speed (m/s)"].set(f"{V_wind:.2f}")
 
         # Calculate Horizontal Displacement using Glide Ratio
-        glide_ratio = 0.7  # Default glide ratio for parachutes
+        glide_ratio = 0.7  # Realistic glide ratio for parachutes
         d = glide_ratio * altitude
         calculated_vars["Horizontal Displacement (m)"].set(f"{d:.2f}")
 
