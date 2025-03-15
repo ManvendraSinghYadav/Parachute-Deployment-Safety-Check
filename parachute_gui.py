@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, ttk
 from PIL import Image, ImageTk
 import os
 import math
@@ -14,8 +14,8 @@ logo_path = "D:/isro project image/parachute_background.jpg"
 # Initialize Main Window
 root = tk.Tk()
 root.title("Parachute Deployment System")
-root.geometry("1280x800")
-root.configure(bg="#f4f4f4")
+root.geometry("1400x900")  # Wider window
+root.configure(bg="#f0f0f0")
 
 # Check if the logo exists
 if not os.path.exists(logo_path):
@@ -27,31 +27,72 @@ logo = Image.open(logo_path)
 logo = logo.resize((250, 80), Image.LANCZOS)
 logo = ImageTk.PhotoImage(logo)
 
-logo_label = tk.Label(root, image=logo, bg="#f4f4f4")
+logo_label = tk.Label(root, image=logo, bg="#f0f0f0")
 logo_label.pack(pady=10)
 
-# Create Form Frame (Center aligned)
-form_frame = tk.Frame(root, bg="white", padx=20, pady=20, relief="ridge", bd=3)
-form_frame.pack(pady=20)
+# Create Main Form Frame
+form_frame = tk.Frame(root, bg="#ffffff", padx=20, pady=20, relief="ridge", bd=3)
+form_frame.pack(pady=20, fill="both", expand=True)  # Make the form frame wider
 
-tk.Label(form_frame, text="Enter Parachute Deployment Details", font=("Arial", 16, "bold"), bg="white").pack(pady=10)
+# Title
+tk.Label(form_frame, text="Enter Parachute Deployment Details", font=("Arial", 16, "bold"), bg="#ffffff").pack(pady=10)
 
-# Entry Fields
+# Left Frame for User Input
+left_frame = tk.LabelFrame(form_frame, text="Input Fields", bg="#ffffff", padx=10, pady=10, font=("Arial", 12, "bold"))
+left_frame.pack(side="left", padx=20, pady=10, fill="y")
+
+# Right Frame for Calculated Values
+right_frame = tk.LabelFrame(form_frame, text="Calculated Values", bg="#ffffff", padx=10, pady=10, font=("Arial", 12, "bold"))
+right_frame.pack(side="right", padx=20, pady=10, fill="both", expand=True)  # Make it wider and expandable
+
+# Entry Fields (Left Side)
 entries = {}
-fields = ["Mass (kg)", "Temperature (°C)", "Altitude (m)", "Velocity (m/s)"]
+fields = [
+    "Mass (kg)", "Temperature (°C)", "Altitude (m)", "Velocity (m/s)", 
+    "Parachute Area (m²)"
+]
 
 for field in fields:
-    row = tk.Frame(form_frame, bg="white")
+    row = tk.Frame(left_frame, bg="#ffffff")
     row.pack(pady=5, fill="x")
 
-    tk.Label(row, text=f"{field}:", font=("Arial", 12), bg="white", width=18, anchor="w").pack(side="left", padx=5)
+    tk.Label(row, text=f"{field}:", font=("Arial", 12), bg="#ffffff", width=18, anchor="w").pack(side="left", padx=5)
     entry = tk.Entry(row, font=("Arial", 12), width=20)
     entry.pack(side="right", padx=5)
     entries[field] = entry
 
-# Auto-Calculated Fields
-calculated_vars = {"Pressure (hPa)": tk.StringVar(), "Humidity (%)": tk.StringVar()}
+# Dropdown for Parachute Shape (Left Side)
+tk.Label(left_frame, text="Parachute Shape:", font=("Arial", 12), bg="#ffffff").pack(pady=5)
+parachute_shape_var = tk.StringVar()
+parachute_shape_dropdown = ttk.Combobox(left_frame, textvariable=parachute_shape_var, font=("Arial", 12), width=18)
+parachute_shape_dropdown['values'] = ("Round", "Square", "Elliptical")
+parachute_shape_dropdown.current(0)  # Default to Round
+parachute_shape_dropdown.pack(pady=5)
 
+# Auto-Calculated Fields (Right Side)
+calculated_vars = {
+    "Pressure (hPa)": tk.StringVar(),
+    "Humidity (%)": tk.StringVar(),
+    "Wind Speed (m/s)": tk.StringVar(),
+    "Descent Rate (m/s)": tk.StringVar(),
+    "Glide Ratio": tk.StringVar(),
+    "Impact Force (N)": tk.StringVar(),
+    "Horizontal Displacement (m)": tk.StringVar(),
+    "Body Position": tk.StringVar()
+}
+
+for field, var in calculated_vars.items():
+    row = tk.Frame(right_frame, bg="#ffffff")
+    row.pack(pady=5, fill="x")
+
+    # Label with fixed width for alignment
+    tk.Label(row, text=f"{field}:", font=("Arial", 12), bg="#ffffff", width=25, anchor="w").pack(side="left", padx=5)
+    
+    # Value with fixed width for alignment
+    label = tk.Label(row, textvariable=var, font=("Arial", 12, "bold"), bg="#ffffff", fg="#007acc", width=15, anchor="e")
+    label.pack(side="right", padx=5)
+
+# Function to Calculate Pressure and Humidity
 def calculate_pressure_and_humidity():
     try:
         temperature = float(entries["Temperature (°C)"].get())
@@ -73,86 +114,95 @@ def calculate_pressure_and_humidity():
         calculated_vars["Humidity (%)"].set(f"{humidity:.2f}")
 
     except ValueError:
-        messagebox.showerror("Error", "Please enter valid numeric values!")
+        messagebox.showerror("Error", "Please enter valid numeric values for Temperature and Altitude!")
 
-for field in ["Pressure (hPa)", "Humidity (%)"]:
-    row = tk.Frame(form_frame, bg="white")
-    row.pack(pady=5, fill="x")
-    
-    tk.Label(row, text=f"{field}:", font=("Arial", 12), bg="white", width=18, anchor="w").pack(side="left", padx=5)
-    label = tk.Label(row, textvariable=calculated_vars[field], font=("Arial", 12, "bold"), bg="white", fg="blue")
-    label.pack(side="right", padx=5)
-
-# Descent Rate (Auto-Calculated)
-tk.Label(form_frame, text="Descent Rate (m/s):", font=("Arial", 12), bg="white").pack(pady=5)
-descent_rate_var = tk.StringVar()
-descent_rate_label = tk.Label(form_frame, textvariable=descent_rate_var, font=("Arial", 12, "bold"), bg="white", fg="blue")
-descent_rate_label.pack(pady=5)
-
-# Calculate Button
+# Function to Calculate Descent Rate and Horizontal Displacement
 def calculate_descent_rate():
     try:
         # Ensure pressure and humidity are calculated first
         calculate_pressure_and_humidity()
 
+        # Get user inputs
         mass = float(entries["Mass (kg)"].get())
         temperature = float(entries["Temperature (°C)"].get())
-        pressure = float(calculated_vars["Pressure (hPa)"].get())
-
-        g = 9.81  # Gravity
-        Cd = 1.5  # Drag Coefficient
-        A = 3.0   # Parachute Area
+        altitude = float(entries["Altitude (m)"].get())
+        parachute_area = float(entries["Parachute Area (m²)"].get())
+        parachute_shape = parachute_shape_var.get()
 
         # Air Density Calculation
+        pressure = float(calculated_vars["Pressure (hPa)"].get())
         rho = pressure * 100 / (287.05 * (temperature + 273.15))
-        descent_rate = math.sqrt((2 * mass * g) / (rho * A * Cd))
-        descent_rate_var.set(f"{descent_rate:.2f} m/s")
 
-        # Save values to CSV after calculation
-        file_path = "D:/isro project image/user_input.csv"
-        user_data = {
-            "Mass (kg)": entries["Mass (kg)"].get(),
-            "Temperature (°C)": entries["Temperature (°C)"].get(),
-            "Altitude (m)": entries["Altitude (m)"].get(),
-            "Velocity (m/s)": entries["Velocity (m/s)"].get(),
-            "Pressure (hPa)": calculated_vars["Pressure (hPa)"].get(),
-            "Humidity (%)": calculated_vars["Humidity (%)"].get(),
-            "Descent Rate (m/s)": descent_rate_var.get()
-        }
+        # Drag Coefficient based on Parachute Shape
+        if parachute_shape == "Round":
+            Cd = 1.5
+        elif parachute_shape == "Square":
+            Cd = 1.2
+        elif parachute_shape == "Elliptical":
+            Cd = 1.0
 
-        with open(file_path, mode="w", newline="", encoding="utf-8") as file:
-            writer = csv.writer(file)
-            writer.writerow(user_data.keys())
-            writer.writerow(user_data.values())
+        # Descent Rate Calculation
+        g = 9.81
+        descent_rate = math.sqrt((2 * mass * g) / (rho * parachute_area * Cd))
+        calculated_vars["Descent Rate (m/s)"].set(f"{descent_rate:.2f}")
 
-        messagebox.showinfo("Success", "Descent rate calculated and saved!")
+        # Time of Descent
+        t = altitude / descent_rate
+
+        # Estimate Wind Speed (if not provided)
+        # Use a realistic wind speed range (3–8 m/s)
+        V_wind = 5.0  # Default wind speed
+        calculated_vars["Wind Speed (m/s)"].set(f"{V_wind:.2f}")
+
+        # Calculate Horizontal Displacement using Glide Ratio
+        glide_ratio = 0.7  # Default glide ratio for parachutes
+        d = glide_ratio * altitude
+        calculated_vars["Horizontal Displacement (m)"].set(f"{d:.2f}")
+
+        # Update Glide Ratio
+        calculated_vars["Glide Ratio"].set(f"{glide_ratio:.2f}")
+
+        # Impact Force Calculation
+        impact_force = mass * g  # Simplified calculation
+        calculated_vars["Impact Force (N)"].set(f"{impact_force:.2f}")
+
+        # Suggest Body Position
+        if descent_rate > 10:  # High descent rate
+            calculated_vars["Body Position"].set("Head Down")
+        elif glide_ratio < 1:  # Low glide ratio
+            calculated_vars["Body Position"].set("Sitting")
+        else:  # Moderate conditions
+            calculated_vars["Body Position"].set("Spread Eagle")
 
     except ValueError:
         messagebox.showerror("Error", "Please enter valid numeric values!")
 
+# Calculate Descent Rate Button (Center)
 calc_button = tk.Button(form_frame, text="Calculate Descent Rate", command=calculate_descent_rate,
                         bg="#007acc", fg="white", font=("Arial", 12, "bold"))
-calc_button.pack(pady=5)
+calc_button.pack(pady=20)
 
-# **Submit Button - Saves Input & Opens GUI 2**
+# Check Deployment Button (Bottom)
 def record_input():
-    calculate_pressure_and_humidity()  
-    calculate_descent_rate()  
-
-    # Prepare user data
+    calculate_descent_rate()
     user_data = {
         "Mass (kg)": entries["Mass (kg)"].get(),
         "Temperature (°C)": entries["Temperature (°C)"].get(),
         "Altitude (m)": entries["Altitude (m)"].get(),
         "Velocity (m/s)": entries["Velocity (m/s)"].get(),
+        "Parachute Area (m²)": entries["Parachute Area (m²)"].get(),
+        "Parachute Shape": parachute_shape_var.get(),
+        "Body Position": calculated_vars["Body Position"].get(),
         "Pressure (hPa)": calculated_vars["Pressure (hPa)"].get(),
         "Humidity (%)": calculated_vars["Humidity (%)"].get(),
-        "Descent Rate (m/s)": descent_rate_var.get()
+        "Wind Speed (m/s)": calculated_vars["Wind Speed (m/s)"].get(),
+        "Descent Rate (m/s)": calculated_vars["Descent Rate (m/s)"].get(),
+        "Glide Ratio": calculated_vars["Glide Ratio"].get(),
+        "Impact Force (N)": calculated_vars["Impact Force (N)"].get(),
+        "Horizontal Displacement (m)": calculated_vars["Horizontal Displacement (m)"].get()
     }
 
     messagebox.showinfo("Input Recorded", "Data saved. Opening Graphs...")
-
-    # Call the create_graphs function directly
     create_graphs(user_data)
 
 submit_button = tk.Button(form_frame, text="Check Deployment", command=record_input,
