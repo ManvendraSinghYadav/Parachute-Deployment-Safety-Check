@@ -87,11 +87,13 @@ for field in fields:
 
 # Dropdown for Parachute Shape (Left Side)
 tk.Label(left_frame, text="Parachute Shape:", font=("Arial", 12), bg="#ffffff").pack(pady=5)
+
 parachute_shape_var = tk.StringVar()
 parachute_shape_dropdown = ttk.Combobox(left_frame, textvariable=parachute_shape_var, font=("Arial", 12), width=18)
 parachute_shape_dropdown['values'] = ("Round", "Square", "Elliptical")
 parachute_shape_dropdown.current(0)  # Default to Round
 parachute_shape_dropdown.pack(pady=5)
+
 
 # Auto-Calculated Fields (Right Side)
 calculated_vars = {
